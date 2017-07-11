@@ -1,6 +1,6 @@
-REGISTRY?=directxman12
+REGISTRY?=anchorfree
 IMAGE?=k8s-prometheus-adapter
-TEMP_DIR:=$(shell mktemp -d)
+TEMP_DIR:=$(shell mktemp -d tmp.XXXXXX)
 ARCH?=amd64
 ALL_ARCH=amd64 arm arm64 ppc64le s390x
 ML_PLATFORMS=linux/amd64,linux/arm,linux/arm64,linux/ppc64le,linux/s390x
@@ -33,13 +33,10 @@ build: vendor
 
 docker-build: vendor
 	cp deploy/Dockerfile $(TEMP_DIR)
-	cd $(TEMP_DIR) && sed -i "s|BASEIMAGE|$(BASEIMAGE)|g" Dockerfile
+	cd $(TEMP_DIR) && sed -i "" "s|BASEIMAGE|$(BASEIMAGE)|g" Dockerfile
 
-	docker run -it -v $(TEMP_DIR):/build -v $(shell pwd):/go/src/github.com/directxman12/k8s-prometheus-adapter -e GOARCH=$(ARCH) golang:1.8 /bin/bash -c "\
-		CGO_ENABLED=0 go build -a -tags netgo -o /build/adapter github.com/directxman12/k8s-prometheus-adapter/cmd/adapter"
-
-	docker build -t $(REGISTRY)/$(IMAGE)-$(ARCH):$(VERSION) $(TEMP_DIR)
-	sudo rm -r $(TEMP_DIR)
+	docker build -t $(REGISTRY)/$(IMAGE)-$(ARCH):$(VERSION) -f $(TEMP_DIR)/Dockerfile .
+	rm -r $(TEMP_DIR)
 
 push-%:
 	$(MAKE) ARCH=$* docker-build
