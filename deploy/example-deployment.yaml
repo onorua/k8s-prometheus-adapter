@@ -81,15 +81,17 @@ spec:
         app: custom-metrics-apiserver
       name: custom-metrics-apiserver
     spec:
-      serviceAccountName: custom-metrics-apiserver
+        #serviceAccountName: custom-metrics-apiserver
       containers:
       - name: custom-metrics-apiserver
-        image: directxman12/k8s-prometheus-adapter
+        image: anchorfree/k8s-prometheus-adapter-amd64
         args:
         - /adapter
         - --secure-port=6443
         - --tls-cert-file=/var/run/serving-cert/serving.crt
         - --tls-private-key-file=/var/run/serving-cert/serving.key
+        - --tls-ca-file=/var/run/serving-cert/ca.pem
+        - --requestheader-client-ca-file=/var/run/serving-cert/ca.pem
         - --logtostderr=true
         - --prometheus-url=http://prometheus.prom.svc:9090/
         - --metrics-relist-interval=30s
@@ -123,6 +125,9 @@ kind: APIService
 metadata:
   name: v1alpha1.custom-metrics.metrics.k8s.io
 spec:
+  insecureSkipTLSVerify: true
+  groupPriorityMinimum: 1000
+  versionPriority: 5
   insecureSkipTLSVerify: true
   group: custom-metrics.metrics.k8s.io
   priority: 150
